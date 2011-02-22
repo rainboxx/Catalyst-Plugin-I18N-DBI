@@ -2,19 +2,7 @@
 abstract: 'DBI based I18N for Catalyst'
 author:
   - 'Matthias Dietrich <perl@rainboxx.de>'
-configure_requires:
-  Module::Build: 0.36
-generated_by: 'Module::Build version 0.3607'
-license: perl
-meta-spec:
-  url: http://module-build.sourceforge.net/META-spec-v1.4.html
-  version: 1.4
-name: Catalyst-Plugin-I18N-DBI
-provides:
-  Catalyst::Plugin::I18N::DBI:
-    file: lib/Catalyst/Plugin/I18N/DBI.pm
-    version: v0.2.5
-requires:
+build_requires:
   DBI: 0
   I18N::LangTags: 0
   I18N::LangTags::Detect: 0
@@ -24,6 +12,21 @@ requires:
   Task::Weaken: 0
   Test::More: 0
   version: 0
+configure_requires:
+  Module::Build: 0.36
+generated_by: 'Module::Build version 0.3624'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Catalyst-Plugin-I18N-DBI
+provides:
+  Catalyst::Plugin::I18N::DBI:
+    file: lib/Catalyst/Plugin/I18N/DBI.pm
+    version: v0.2.5
 resources:
+  bugtracker: http://rt.cpan.org/NoAuth/Bugs.html?Dist=CloudApp-REST
+  homepage: http://github.com/rainboxx/CloudApp-REST/
   license: http://dev.perl.org/licenses/
+  repository: git://github.com/rainboxx/CloudApp-REST.git
 version: v0.2.5

@@ -121,19 +121,11 @@ sub loc {
     my $text = shift;
     my $args = shift;
 
-    my $lang_handle;
-    my $handles = $c->config->{'I18N::DBI'}->{handles};
-    foreach (@{ $c->languages }) {
-        if ($lang_handle = $handles->{$_}) {
-            last;
-        }
-    }
+    my $lang_handle = $c->_get_handle;
 
     unless ($lang_handle) {
-        unless ($lang_handle = $handles->{ $c->config->{'I18N::DBI'}->{default_lang} }) {
-            $c->log->fatal("No default language '" . $c->config->{'I18N::DBI'}->{default_lang} . "' available!");
-            return $text;
-        }
+        $c->log->fatal("No default language '" . $c->config->{'I18N::DBI'}->{default_lang} . "' available!");
+        return $text;
     }
 
     my $value;
@@ -145,6 +137,24 @@ sub loc {
 
     utf8::decode($value);
     return $value;
+}
+
+sub _get_handle {
+    my $c = shift;
+
+    my $lang_handle;
+    my $handles = $c->config->{'I18N::DBI'}->{handles};
+    foreach (@{ $c->languages }) {
+        if ($lang_handle = $handles->{$_}) {
+            last;
+        }
+    }
+
+    if (!$lang_handle && $handles->{ $c->config->{'I18N::DBI'}->{default_lang} }) {
+        $lang_handle = $handles->{ $c->config->{'I18N::DBI'}->{default_lang} };
+    }
+
+    return $lang_handle;
 }
 
 =head2 localize
@@ -170,10 +180,46 @@ sub languages {
     if ($languages) {
         $c->{languages} = $languages;
     } else {
-        $c->{languages} ||= [I18N::LangTags::implicate_supers(I18N::LangTags::Detect->http_accept_langs($c->request->header('Accept-Language')))];
+        $c->{languages} ||= [ I18N::LangTags::implicate_supers(I18N::LangTags::Detect->http_accept_langs($c->request->header('Accept-Language'))) ];
     }
 
     return $c->{languages};
+}
+
+=head3 language
+
+return selected locale in your locales list.
+
+=cut
+
+sub language {
+    my $c = shift;
+
+    my $lang_handle = $c->_get_handle;
+    if ($lang_handle) {
+        my $lang = ref $lang_handle;
+        $lang =~ s/.*:://;
+
+        return $lang;
+    }
+}
+
+=head3 language_tag
+
+return language tag for current locale. The most notable difference from this
+method in comparison to C<language()> is typically that languages and regions
+are joined with a dash and not an underscore.
+
+    $c->language(); # en_us
+    $c->language_tag(); # en-us
+
+=cut
+
+sub language_tag {
+    my $c = shift;
+
+    my $lang_handle = $c->_get_handle;
+    return $lang_handle->language_tag if $lang_handle;
 }
 
 =head1 EXTENDED AND INTERNAL METHODS
@@ -238,13 +284,13 @@ sub _init_i18n {
                         my $res = $c->model($cfg->{lex_class})->search({ lex_key => $key, lang => $lang, lex => $default_lex })->first;
                         unless ($res) {
                             my $rec = $c->model($cfg->{lex_class})->create(
-                                                                                     {
-                                                                                       lex       => $default_lex,
-                                                                                       lex_key   => $key,
-                                                                                       lex_value => '? ' . $key,
-                                                                                       lang      => $lang
-                                                                                     }
-                                                                                    );
+                                                                           {
+                                                                             lex       => $default_lex,
+                                                                             lex_key   => $key,
+                                                                             lex_value => '? ' . $key,
+                                                                             lang      => $lang
+                                                                           }
+                            );
                             $value = $rec->lex_value;
                         } else {
                             $value = $res->lex_value;
